@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JeparaStore - Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f4f4f4;
+        }
+        header {
+            background: linear-gradient(135deg, #128f1d, #15a138);
+            color: white;
+            padding: 1rem 0;
+        }
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        nav ul li {
+            margin-left: 2rem;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        nav ul li a:hover {
+            color: #FFD700;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .login-form, .admin-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .login-form h2, .admin-section h2 {
+            color: #8B4513;
+            margin-bottom: 1rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        .btn {
+            display: inline-block;
+            background: #1cb63d;
+            color: white;
+            padding: 0.8rem 2rem;
+            text-decoration: none;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #FFA500;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .messages-list, .products-list {
+            margin-top: 1rem;
+        }
+        .message-item, .product-item {
+            background: #f9f9f9;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        .product-form {
+            display: none;
+        }
+        .product-form.show {
+            display: block;
+        }
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+            }
+            nav ul {
+                margin-top: 1rem;
+            }
+            nav ul li {
+                margin-left: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">JeparaStore Admin</div>
+            <ul>
+                <li><a href="index.html">Kembali ke Situs</a></li>
+                <li><a href="#" id="logout">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div id="login-section" class="login-form">
+            <h2>Login Admin</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+        </div>
+
+        <div id="admin-panel" style="display: none;">
+            <div class="admin-section">
+                <h2>Kelola Produk</h2>
+                <button id="add-product-btn" class="btn">Tambah Produk Baru</button>
+                <div id="product-form" class="product-form">
+                    <h3>Tambah/Edit Produk</h3>
+                    <form id="product-form-element">
+                        <input type="hidden" id="product-index">
+                        <div class="form-group">
+                            <label for="product-name">Nama Produk:</label>
+                            <input type="text" id="product-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-description">Deskripsi:</label>
+                            <textarea id="product-description" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-image">URL Gambar:</label>
+                            <input type="url" id="product-image" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-link">Link Produk:</label>
+                            <input type="url" id="product-link" required>
+                        </div>
+                        <button type="submit" class="btn">Simpan</button>
+                        <button type="button" id="cancel-product" class="btn btn-danger">Batal</button>
+                    </form>
+                </div>
+                <div id="products-list" class="products-list">
+                    <!-- Products will be loaded here -->
+                </div>
+            </div>
+
+            <div class="admin-section">
+                <h2>Pesan Kontak</h2>
+                <div id="messages-list" class="messages-list">
+                    <!-- Messages will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple login (in real app, use proper authentication)
+        const ADMIN_USERNAME = 'admin';
+        const ADMIN_PASSWORD = 'admin123';
+
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('admin-panel').style.display = 'block';
+                loadProducts();
+                loadMessages();
+            } else {
+                alert('Username atau password salah!');
+            }
+        });
+
+        document.getElementById('logout').addEventListener('click', function() {
+            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('admin-panel').style.display = 'none';
+        });
+
+        // Product management
+        function loadProducts() {
+            const products = JSON.parse(localStorage.getItem('products')) || [];
+            const list = document.getElementById('products-list');
+            list.innerHTML = '';
+            products.forEach((product, index) => {
+                const item = document.createElement('div');
+                item.className = 'product-item';
+                item.innerHTML = `
+                    <h3>${product.name}</h3>
+                    <p>${product.description}</p>
+                    <button class="btn" onclick="editProduct(${index})">Edit</button>
+                    <button class="btn btn-danger" onclick="deleteProduct(${index})">Hapus</button>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function editProduct(index) {
+            const products = JSON.parse(localStorage.getItem('products')) || [];
+            const product = products[index];
+            document.getElementById('product-index').value = index;
+            document.getElementById('product-name').value = product.name;
+            document.getElementById('product-description').value = product.description;
+            document.getElementById('product-image').value = product.image;
+            document.getElementById('product-link').value = product.link;
+            document.getElementById('product-form').classList.add('show');
+        }
+
+        function deleteProduct(index) {
+            if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
+                const products = JSON.parse(localStorage.getItem('products')) || [];
+                products.splice(index, 1);
+                localStorage.setItem('products', JSON.stringify(products));
+                loadProducts();
+            }
+        }
+
+        document.getElementById('add-product-btn').addEventListener('click', function() {
+            document.getElementById('product-form-element').reset();
+            document.getElementById('product-index').value = '';
+            document.getElementById('product-form').classList.add('show');
+        });
+
+        document.getElementById('cancel-product').addEventListener('click', function() {
+            document.getElementById('product-form').classList.remove('show');
+        });
+
+        document.getElementById('product-form-element').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const index = document.getElementById('product-index').value;
+            const product = {
+                name: document.getElementById('product-name').value,
+                description: document.getElementById('product-description').value,
+                image: document.getElementById('product-image').value,
+                link: document.getElementById('product-link').value
+            };
+            let products = JSON.parse(localStorage.getItem('products')) || [];
+            if (index === '') {
+                products.push(product);
+            } else {
+                products[index] = product;
+            }
+            localStorage.setItem('products', JSON.stringify(products));
+            document.getElementById('product-form').classList.remove('show');
+            loadProducts();
+        });
+
+        // Message management
+        function loadMessages() {
+            const messages = JSON.parse(localStorage.getItem('messages')) || [];
+            const list = document.getElementById('messages-list');
+            list.innerHTML = '';
+            if (messages.length === 0) {
+                list.innerHTML = '<p>Tidak ada pesan baru.</p>';
+                return;
+            }
+            messages.forEach((message, index) => {
+                const item = document.createElement('div');
+                item.className = 'message-item';
+                item.innerHTML = `
+                    <h3>${message.name} (${message.email})</h3>
+                    <p><strong>Telepon:</strong> ${message.phone}</p>
+                    <p><strong>Pesan:</strong> ${message.message}</p>
+                    <p><small>${new Date(message.date).toLocaleString()}</small></p>
+                    <button class="btn btn-danger" onclick="deleteMessage(${index})">Hapus</button>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function deleteMessage(index) {
+            if (confirm('Apakah Anda yakin ingin menghapus pesan ini?')) {
+                const messages = JSON.parse(localStorage.getItem('messages')) || [];
+                messages.splice(index, 1);
+                localStorage.setItem('messages', JSON.stringify(messages));
+                loadMessages();
+            }
+        }
+    </script>
+</body>
+</html>
